@@ -4,6 +4,8 @@
 #include <errno.h> // global errno var
 
 // C header files of syscall
+#include <fcntl.h>
+#include <poll.h>
 #include <unistd.h>
 
 // C header files of net syscall
@@ -16,6 +18,7 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
+#include <memory>
 
 // custom header files
 #include "panic.h"
