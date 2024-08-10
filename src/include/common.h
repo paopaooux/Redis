@@ -13,9 +13,12 @@
 #include <netinet/ip.h>
 
 // C++ header files
+#include <cassert>
 #include <cstring>
 #include <iostream>
 
 // custom header files
 #include "panic.h"
-// #include "print.h"
+#include "util.h"
+
+const size_t k_max_msg = 4096;
