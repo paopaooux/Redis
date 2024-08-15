@@ -1,42 +1,30 @@
 #pragma once
 
-// C header files
-#include <errno.h> // global errno var
-
-// C header files of syscall
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-#include <netinet/ip.h>
-
 // C++ header files
-#include <cassert>
-#include <cstring>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-// panic func
-void err(const char* msg) {
-    std::perror(msg);
-    std::abort();
-}
-
-void msg(const char* msg) {
-    std::perror(msg);
-}
+#include <cassert> // assert
+#include <memory>  // smart pointer
 
 // global constant
-const size_t k_max_msg = 4096;
+namespace redis {
+// 容器长度相关      -> std::size_t
+// 系统调用返回值相关 -> ssize_t
+// 传输协议相关      -> int32_t
+// 其他             -> ints
+enum class CmdRes {
+    RES_OK = 0,
+    RES_ERR = 1,
+    RES_NX = 2, // not exist
+};
+enum class ConnState {
+    STATE_REQ = 0,
+    STATE_RES = 1,
+    STATE_END = 2,
+};
 
-// #define DEBUG
+} // namespace redis
+
+#define DEBUG
 
 // custom header files
-#include "debug.h"
-#include "util.h"
+#include "panic.h"
+#include "zstream.h"
