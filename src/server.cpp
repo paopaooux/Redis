@@ -1,8 +1,5 @@
-#include <map>
-#include <string>
-#include <vector>
-
 #include "common.h"
+#include "request.h"
 
 enum class ConnState {
     STATE_REQ = 0,
@@ -12,7 +9,7 @@ enum class ConnState {
 
 class Conn {
 private:
-    int fd = -1;
+    int fd{-1};
     ConnState state{ConnState::STATE_REQ};
     size_t rbuf_size{0};
     uint8_t rbuf[4 + k_max_msg]{};
@@ -21,6 +18,13 @@ private:
     uint8_t wbuf[4 + k_max_msg]{};
 
 public:
+    friend std::ostream& operator<<(std::ostream& out, const Conn& obj) {
+        out << "Conn(\n";
+        out << "\tfd = " << obj.fd << ",";
+        out << "\tstate = " << obj.state << ",";
+        return out;
+    }
+
     Conn(int m_fd = -1, ConnState m_state = ConnState::STATE_REQ, size_t m_rbuf_size = 0,
         size_t m_wbuf_size = 0, size_t m_wbuf_sent = 0)
         : fd{m_fd}, state{m_state}, rbuf_size{m_rbuf_size}, wbuf_size{m_wbuf_size},
@@ -50,13 +54,21 @@ public:
         if (4 + len > rbuf_size)
             return false;
 
-        printf("client says: %.*s\n", len, &rbuf[4]);
+        uint32_t rescode = 0;
+        uint32_t wlen = 0;
 
-        memcpy(&wbuf[0], &len, 4);
-        memcpy(&wbuf[4], &rbuf[4], len);
-        wbuf_size = len + 4;
+        int32_t err = do_request(&rbuf[4], len, &rescode, &wbuf[4 + 4], &wlen);
+        if (err) {
+            state = ConnState::STATE_END;
+            return false;
+        }
+        wlen += 4;
 
+        memcpy(&wbuf[0], &wlen, 4);
+        memcpy(&wbuf[4], &rescode, 4);
+        wbuf_size = 4 + wlen;
         size_t remain = rbuf_size - 4 - len;
+
         if (remain) {
             memmove(rbuf, &rbuf[4 + len], remain);
         }
@@ -67,6 +79,7 @@ public:
 
         return (state == ConnState::STATE_REQ);
     }
+
     void state_response() {
         while (try_flush_buffer()) {}
     }
@@ -76,6 +89,7 @@ public:
         do {
             size_t remain = wbuf_size - wbuf_sent;
             rv = write(fd, &wbuf[wbuf_sent], remain);
+
         } while (rv < 0 && errno == EINTR);
         if (rv < 0 && errno == EAGAIN)
             return false;
@@ -107,8 +121,9 @@ public:
             size_t cap = sizeof(rbuf) - rbuf_size;
             rv = read(fd, &rbuf[rbuf_size], cap);
         } while (rv < 0 && errno == EINTR);
-        if (rv < 0 && errno == EAGAIN)
+        if (rv < 0 && errno == EAGAIN) {
             return false;
+        }
         if (rv < 0) {
             msg("read() error");
             state = ConnState::STATE_END;
@@ -148,9 +163,7 @@ public:
     EventEngine() {}
     void put(std::unique_ptr<Conn> conn) {
         auto conn_fd = conn->get_fd();
-        // assert(
-        //     fd2conn.find(conn_fd) != fd2conn.end()
-        //     || fd2conn[conn_fd] != nullptr);
+        assert(fd2conn.find(conn_fd) != fd2conn.end() || fd2conn[conn_fd] == nullptr);
         fd2conn[conn->get_fd()] = std::move(conn);
     }
     int32_t accept_new_conn(int fd) {
@@ -171,7 +184,7 @@ public:
         put(std::move(conn));
         return 0;
     }
-    void work(int fd) { // fd是套接字
+    void join(int fd) { // fb是套接字
         // set the listen fd to nonblocking mode
         fd_set_nb(fd);
 
@@ -184,7 +197,6 @@ public:
             struct pollfd pfd = {fd, POLLIN, 0};
             poll_args.push_back(pfd);
             // connection fds
-            std::cout << fd2conn.size() << "\n";
             for (auto const& [fd, conn] : fd2conn) {
                 if (!conn)
                     continue;
@@ -221,7 +233,10 @@ public:
         }
     }
 };
+
 int main() {
+    EventEngine event_engine{};
+
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
         err("socket()");
@@ -245,8 +260,8 @@ int main() {
     if (rv) {
         err("listen()");
     }
-    EventEngine event_engine = EventEngine();
-    event_engine.work(fd);
+
+    event_engine.join(fd);
 
     return 0;
 }
