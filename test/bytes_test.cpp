@@ -17,5 +17,31 @@ int main() {
     std::cout << "n2 = " << n2 << "\n";
 
     std::cout << data << "\n";
+
+    std::cout << "test move\n";
+    redis::Bytes data_;
+    data_.appendBytes_move(std::move(data));
+    std::cout << "data.size() -> " << data.size() << "\n";
+    std::cout << "data_.size() -> " << data_.size() << "\n";
+    redis::Bytes buff;
+    std::vector<std::string> cmds = {"set", "k", "v"};
+    uint32_t len = 4;
+    for (const std::string& cmd : cmds) {
+        len += 4 + cmd.size();
+    }
+
+    buff.appendNumber(len, 4);
+
+    uint32_t n = cmds.size();
+    buff.appendNumber(n, 4);
+
+    for (const std::string& s : cmds) {
+        uint32_t p = (uint32_t)s.size();
+        buff.appendNumber(p, 4);
+        buff.appendString(s);
+    }
+
+    std::cout << "client send buff : " << buff << "\n";
+
     return 0;
 }
