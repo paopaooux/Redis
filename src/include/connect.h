@@ -3,8 +3,8 @@
 #include <poll.h> // poll syscall
 
 #include "common.h"
+#include "execute.h"
 #include "file.h"
-#include "interpret.h"
 
 namespace redis {
 
@@ -87,15 +87,16 @@ public:
     }
 
     bool try_one_request() {
-        std::vector<std::string_view> cmds;
-        auto ok = parse_req(rbuf, cmds);
+        std::vector<std::string> cmd;
+        auto ok = parse_req(rbuf, cmd);
         if (!ok) {
             msg("bad req");
             m_state = ConnState::STATE_END;
             return false;
         }
+        // 数据从Bytes中**拷贝**进cmd中
         Bytes out;
-        interpret(cmds, out);
+        interpret(cmd, out);
 
         wbuf.appendNumber(out.size(), 4);
         wbuf.appendBytes_move(std::move(out));
@@ -124,7 +125,7 @@ public:
         default:
             break;
         }
-        if (wbuf.read_end()) {
+        if (wbuf.is_read_end()) {
             m_state = ConnState::STATE_REQ;
             rbuf.clear();
             wbuf.clear();

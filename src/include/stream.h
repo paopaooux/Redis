@@ -3,6 +3,7 @@
 #include <bitset>
 #include <cstddef>
 #include <iostream>
+#include <tuple>
 #include <type_traits>
 #include <typeinfo>
 
