@@ -61,18 +61,20 @@ public:
 
     void handle_response(Bytes& buff, std::string pre = "") {
         auto type = static_cast<SerType>(buff.getNumber<int>(1));
+        // std::cout << type << " ";
 
         uint32_t str_len, arr_len;
         std::string_view str, msg;
         int64_t flag;
-        CmdRes res_code;
+        CmdErr res_code;
+        double val;
 
         switch (type) {
         case SerType::SER_NIL:
             std::cout << pre << "[nil]\n";
             break;
         case SerType::SER_ERR:
-            res_code = static_cast<CmdRes>(buff.getNumber<uint32_t>(4));
+            res_code = static_cast<CmdErr>(buff.getNumber<uint32_t>(4));
             str_len = buff.getNumber<uint32_t>(4);
             msg = buff.getStringView(str_len);
             std::cout << pre << "[err]: " << res_code << " " << msg << "\n";
@@ -86,9 +88,13 @@ public:
             flag = buff.getNumber<int64_t>(8);
             std::cout << pre << "[int]: " << flag << "\n";
             break;
+        case SerType::SER_DBL:
+            val = buff.getNumber<double>(8);
+            std::cout << pre << "[dbl]: " << val << "\n";
+            break;
         case SerType::SER_ARR:
-            std::cout << pre << "[arr]: \n";
             arr_len = buff.getNumber<uint32_t>(4);
+            std::cout << pre << "[arr]: len = " << arr_len << "\n";
             for (int i = 0; i < arr_len; ++i) {
                 handle_response(buff, pre + "  ");
             }

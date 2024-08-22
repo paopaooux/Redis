@@ -1,3 +1,5 @@
+#pragma once
+
 #include <functional>
 #include <iostream>
 #include <optional>
@@ -32,7 +34,10 @@ private:
     friend HMap;
 
     HTab() = default;
-    HTab(size_t n) : tab{n}, mask{n - 1}, size{0} { assert(n > 0 && ((n - 1) & n) == 0); }
+    HTab(size_t n) : tab{n}, mask{n - 1}, size{0} {
+        std::cout << "!!!HTab -> n = " << n << "\n";
+        assert(n > 0 && ((n - 1) & n) == 0);
+    }
 
     void insert(HNode* node) {
         size_t pos = node->hcode & mask;
