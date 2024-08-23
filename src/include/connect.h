@@ -5,8 +5,11 @@
 #include "common.h"
 #include "execute.h"
 #include "file.h"
+#include "list.h"
 
 namespace redis {
+
+class Server;
 
 class Conn {
 private:
@@ -14,10 +17,16 @@ private:
     ConnState m_state;
     Bytes rbuf, wbuf;
 
+    uint64_t idle_start;
+    DList idle_node;
+
+    friend Server;
+
 public:
     void check() { m_f.check(); }
     explicit Conn(File&& f, ConnState conn_state)
-        : m_f(std::move(f)), m_state{conn_state}, rbuf{}, wbuf{} {
+        : m_f(std::move(f)), m_state{conn_state}, rbuf{}, wbuf{}, idle_start{get_monotonic_usec()},
+          idle_node{} {
         m_f.set_nb();
     }
     int get_fd() const { return m_f.data(); }
@@ -31,6 +40,15 @@ public:
     }
     bool is_end() const { return m_state == ConnState::STATE_END; }
 
+    void start_connection_io(DList* head) {
+        // waked up by poll, update the idle timer
+        // by moving conn to the end of the list.
+        idle_start = get_monotonic_usec();
+        idle_node.detach();
+        head->insert_before(&idle_node);
+
+        connection_io();
+    }
     void connection_io() {
         if (m_state == ConnState::STATE_REQ) {
             state_request();
