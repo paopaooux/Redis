@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <iostream>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
@@ -28,30 +29,22 @@ std::ostream& operator<<(std::ostream& os, const std::optional<T>& op) {
         os << "nil";
     return os;
 }
-
-void print_class(const std::string& str) {
-    std::cout << ")";
+std::string class2str(const std::string& str) {
+    if (str.size())
+        return "\033[33m" + str + "\033[0m";
+    else
+        return ")";
 }
 
 template<typename T1, typename T2, typename... Args>
-void print_class(const std::string& str, T1&& arg1, T2&& arg2, Args&&... args) {
+std::string class2str(const std::string& str, T1&& arg1, T2&& arg2, Args&&... args) {
     static_assert(sizeof...(args) % 2 == 0, "The number of arguments must be even.");
+    std::ostringstream ss;
     if (str.size())
-        std::cout << "\033[33m" << str << "\033[0m( ";
+        ss << "\033[33m" << str << "\033[0m( ";
+    ss << "\033[34m" << arg1 << "\033[0m"
+       << " = " << arg2 << " ";
 
-    std::cout << "\033[34m" << arg1 << "\033[0m"
-              << " = " << arg2 << " ";
-
-    print_class("", std::forward<Args>(args)...);
+    ss << class2str("", std::forward<Args>(args)...);
+    return ss.str();
 }
-
-// template<typename... Args>
-// void print_class(const std::string &str, Args &&...args) {
-//     static_assert(
-//         sizeof...(args) % 2 == 0, "The number of arguments must be even.");
-//     if (str.size()) std::cout << "\033[33m" << str << "\033[0m( ";
-//     ((std::cout << "\033[34m" << std::forward<Args>(args) << "\033[0m"
-//                 << " = " << std::forward<Args>(std::next(args)) << " "),
-//      ...);
-//     std::cout << ")";
-// }
