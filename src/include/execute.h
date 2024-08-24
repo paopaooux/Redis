@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "bytes.h"
+#include "c_thread_pool.h"
 #include "common.h"
 #include "hashtable.h"
 #include "heap.h"
@@ -90,6 +91,7 @@ private:
 
 HMap m_map{};
 Heap m_heap{};
+TheadPool tp;
 
 enum class EntryType {
     T_STR = 1,

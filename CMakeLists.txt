@@ -12,5 +12,5 @@ project(Redis VERSION 0.0.1 LANGUAGES C CXX)
 
 include_directories(${PROJECT_SOURCE_DIR}/src/include)
 
-add_subdirectory(./src)
+add_subdirectory(./src/main)
 add_subdirectory(./test)

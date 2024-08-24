@@ -35,8 +35,8 @@ public:
             return POLLIN;
         else if (m_state == ConnState::STATE_RES)
             return POLLOUT;
-        else
-            assert(0);
+        assert(false);
+        return 0;
     }
     bool is_end() const { return m_state == ConnState::STATE_END; }
 
