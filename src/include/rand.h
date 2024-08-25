@@ -22,11 +22,12 @@ std::string g_rand_str(int length) {
     static const int alphanum_len = sizeof(alphanum);
 
     std::string random_string;
-    while (length--)
+    while (length--) {
         random_string += alphanum[g_rand_int(0, alphanum_len)];
+    }
     return random_string;
 }
 
-std::string g_rand_str() {
+inline std::string g_rand_str() {
     return g_rand_str(g_rand_int(5, 42));
 }

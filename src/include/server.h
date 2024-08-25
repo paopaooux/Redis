@@ -28,11 +28,9 @@ private:
     TheadPool& tp;
 
 public:
-    Server() : m_f{make_socket()}, fd2conn{}, head{}, heap{core::m_heap}, tp{core::tp} {
-        thread_pool_init(&tp, 4);
-    }
+    Server() : m_f{make_socket()}, heap{core::m_heap}, tp{core::tp} { thread_pool_init(&tp, 4); }
 
-    int make_socket() {
+    static int make_socket() {
         int fd = socket(AF_INET, SOCK_STREAM, 0);
         if (fd < 0) {
             err("socket()");
@@ -80,8 +78,9 @@ public:
         std::shared_ptr<Conn> conn = std::make_shared<Conn>(std::move(connf), ConnState::STATE_REQ);
         head.insert_before(&conn->idle_node);
 
-        if (!conn)
+        if (!conn) {
             return -1; // 不用析构, connfd已经由connf接管
+        }
 
         addNewConn(conn);
         return 0;
@@ -100,11 +99,13 @@ public:
             next_us = std::min(next_us, heap.get_min());
         }
 
-        if (next_us == std::numeric_limits<uint64_t>::max())
+        if (next_us == std::numeric_limits<uint64_t>::max()) {
             return 10000;
+        }
 
-        if (next_us <= now_us)
+        if (next_us <= now_us) {
             return 0;
+        }
 
         return (uint32_t)((next_us - now_us) / 1000);
     }
@@ -123,8 +124,9 @@ public:
             poll_args.push_back(pfd);
             // connection fds
             for (auto const& [fd, conn] : fd2conn) {
-                if (!conn)
+                if (!conn) {
                     continue;
+                }
                 struct pollfd pfd = {};
                 pfd.fd = conn->get_fd();
                 pfd.events = conn->get_event();
@@ -171,12 +173,12 @@ public:
             Conn* next = container_of(head.next, Conn, idle_node);
             uint64_t next_us = next->idle_start + k_idle_timeout_ms * 1000;
             if (next_us >= now_us + 1000) {
-                // not ready, the extra 1000us is for the ms resolution of
-                // poll()
+                // not ready,
+                // the extra 1000us is for the ms resolution of poll()
                 break;
             }
 
-            std::cout << "removing idle connection: " << next->get_fd() << "\n";
+            // std::cout << "remove idle connect:" << next->get_fd() << '\n';
             conn_done(next);
 
             // TTL timers
@@ -189,8 +191,9 @@ public:
                 assert(node == &ent->node);
                 delete ent;
 
-                if (nworks++ >= k_max_works)
+                if (nworks++ >= k_max_works) {
                     break;
+                }
                 // 这里要注意的, 在实际情况可能同时有大量的键过期,
                 // 这个释放的时间可能很长, 这里只是粗暴的限制每次次数
             }

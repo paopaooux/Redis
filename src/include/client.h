@@ -20,7 +20,7 @@ public:
         //  m_f.set_nb();
     }
 
-    int make_socket() {
+    static int make_socket() {
         int fd = socket(AF_INET, SOCK_STREAM, 0);
         if (fd < 0) {
             err("socket()");
@@ -51,7 +51,7 @@ public:
         buff.appendNumber(n, 4);
 
         for (const std::string& s : cmds) {
-            uint32_t p = (uint32_t)s.size();
+            auto p = (uint32_t)s.size();
             buff.appendNumber(p, 4);
             buff.appendString(s);
         }
@@ -59,7 +59,7 @@ public:
         assert(ok);
     }
 
-    void handle_response(Bytes& buff, std::string pre = "") {
+    void handle_response(Bytes& buff, const std::string& pre = "") {
         auto type = static_cast<SerType>(buff.getNumber<int>(1));
         // std::cout << type << " ";
 

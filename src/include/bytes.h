@@ -22,13 +22,13 @@ private:
 public:
     Bytes() = default;
 
-    std::size_t size() const { return data.size(); }
+    [[nodiscard]] std::size_t size() const { return data.size(); }
     void reset() { pos = 0; }
     void clear() {
         data.clear();
         reset();
     }
-    bool is_read_end() const { return pos == data.size(); }
+    [[nodiscard]] bool is_read_end() const { return pos == data.size(); }
 
     friend std::ostream& operator<<(std::ostream& os, const Bytes& bytes) {
         std::cout << std::hex;

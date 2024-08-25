@@ -4,6 +4,7 @@
 #include <exception>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "bytes.h"
@@ -14,13 +15,13 @@
 #include "zset.h"
 
 static bool str2dbl(const std::string& s, double& out) {
-    char* endp = NULL;
+    char* endp = nullptr;
     out = strtod(s.c_str(), &endp);
     return endp == s.c_str() + s.size() && !std::isnan(out);
 }
 
 static bool str2int(const std::string& s, int64_t& out) {
-    char* endp = NULL;
+    char* endp = nullptr;
     out = strtoll(s.c_str(), &endp, 10);
     return endp == s.c_str() + s.size();
 }
@@ -69,13 +70,13 @@ namespace core {
 
 class CoreException : public std::exception {
 public:
-    CoreException(CmdErr code, const std::string& message) : m_code(code), m_message(message) {}
+    CoreException(CmdErr code, std::string message) : m_code(code), m_message(std::move(message)) {}
 
-    virtual const char* what() const noexcept {
+    [[nodiscard]] const char* what() const noexcept override {
         return m_message.c_str(); // return the message as a C string
     }
 
-    CmdErr getCode() const noexcept { return m_code; }
+    [[nodiscard]] CmdErr getCode() const noexcept { return m_code; }
 
 private:
     CmdErr m_code;
@@ -287,10 +288,11 @@ void do_zscore(std::vector<std::string>& cmd, Bytes& out) {
 
     const std::string& name = cmd[2];
     auto res = ent->zset->find(name);
-    if (res.has_value())
+    if (res.has_value()) {
         out_dbl(out, res.value());
-    else
+    } else {
         out_nil(out);
+    }
 }
 
 void do_zquery(const std::vector<std::string>& cmd, Bytes& out) {
@@ -349,7 +351,6 @@ void do_expire(const std::vector<std::string>& cmd, Bytes& out) {
         ent->set_ttl(ttl_ms);
     }
     out_int(out, node ? 1 : 0);
-    return;
 }
 
 void do_ttl(const std::vector<std::string>& cmd, Bytes& out) {
@@ -372,8 +373,9 @@ void do_ttl(const std::vector<std::string>& cmd, Bytes& out) {
 }
 
 bool parse_req(Bytes& data, std::vector<std::string>& cmd) {
-    if (data.is_read_end())
+    if (data.is_read_end()) {
         return false;
+    }
     auto cmd_num = data.getNumber<uint32_t>(4);
     while (cmd_num--) {
         auto cmd_len = data.getNumber<uint32_t>(4);

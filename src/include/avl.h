@@ -2,22 +2,21 @@
 
 #include "common.h"
 
-namespace redis {
+namespace redis::avl {
 
-namespace avl {
 struct AVLNode {
     uint32_t depth{0};
     uint32_t cnt{0};
     AVLNode* left{nullptr};
     AVLNode* right{nullptr};
     AVLNode* parent{nullptr};
-    AVLNode() : depth{1}, cnt{1}, left{nullptr}, right{nullptr}, parent{nullptr} {}
+    AVLNode() : depth{1}, cnt{1} {}
 };
 
-uint32_t get_depth(AVLNode* node) {
+inline uint32_t get_depth(AVLNode* node) {
     return node ? node->depth : 0;
 }
-uint32_t get_cnt(AVLNode* node) {
+inline uint32_t get_cnt(AVLNode* node) {
     return node ? node->cnt : 0;
 }
 // 为什么上面这些很容易放在类中作为Get方法也要写成函数?
@@ -76,7 +75,7 @@ AVLNode* fix(AVLNode* node) {
         update(node);
         uint32_t l = get_depth(node->left);
         uint32_t r = get_depth(node->right);
-        AVLNode** from = NULL;
+        AVLNode** from = nullptr;
         if (node->parent) {
             from = (node->parent->left == node) ? &node->parent->left : &node->parent->right;
         }
@@ -94,7 +93,7 @@ AVLNode* fix(AVLNode* node) {
 }
 
 AVLNode* del(AVLNode* node) {
-    if (node->right == NULL) {
+    if (node->right == nullptr) {
         // no right subtree, replace the node with the left subtree
         // link the left subtree to the parent
         AVLNode* parent = node->parent;
@@ -150,7 +149,7 @@ AVLNode* offset(AVLNode* node, int64_t offset) {
             // go to the parent
             AVLNode* parent = node->parent;
             if (!parent) {
-                return NULL;
+                return nullptr;
             }
             if (parent->right == node) {
                 pos -= get_cnt(node->left) + 1;
@@ -163,6 +162,4 @@ AVLNode* offset(AVLNode* node, int64_t offset) {
     return node;
 }
 
-} // namespace avl
-
-} // namespace redis
+} // namespace redis::avl
