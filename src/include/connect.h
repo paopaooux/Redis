@@ -112,7 +112,7 @@ public:
             m_state = ConnState::STATE_END;
             return false;
         }
-        // 数据从Bytes中**拷贝**进cmd中
+        // 数据从Bytes中拷贝进cmd中
         Bytes out;
         interpret(cmd, out);
 

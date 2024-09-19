@@ -47,6 +47,7 @@ private:
                 break;
             }
             std::swap(data[next], data[now]);
+            data[now].change_ref(now);
             now = next;
         }
         data[now].change_ref(now);
@@ -64,6 +65,7 @@ private:
                 break;
             }
             std::swap(data[now], data[next]);
+            data[now].change_ref(now);
             now = next;
         }
         data[now].change_ref(now);

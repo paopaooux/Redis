@@ -35,7 +35,7 @@ private:
 
     HTab() = default;
     HTab(size_t n) : tab{n}, mask{n - 1}, size{0} {
-        std::cout << "!!!HTab -> n = " << n << "\n";
+        // std::cout << "!!!HTab -> n = " << n << "\n";
         assert(n > 0 && ((n - 1) & n) == 0);
     }
 
@@ -56,7 +56,7 @@ private:
         while (*from) {
             if (cmp(*from, key))
                 return from;
-            from = &(*from)->next;
+            from = &((*from)->next);
         }
         return nullptr;
     }
@@ -101,8 +101,7 @@ public:
     size_t size() const { return ht1.size + ht2.size; }
     HNode* lookup(HNode* key, Cmp cmp) {
         help_resizing();
-        HNode** from = nullptr;
-        from = ht1.lookup(key, cmp);
+        HNode** from = ht1.lookup(key, cmp);
         if (!from)
             from = ht2.lookup(key, cmp);
         return from ? *from : nullptr;
@@ -140,7 +139,7 @@ public:
     void start_resizing() {
         assert(ht2.tab.size() == 0);
         ht2 = std::move(ht1);
-        ht1 = std::move(HTab{4});
+        ht1 = std::move(HTab{(ht2.mask + 1) * 2});
         resizing_pos = 0;
     }
     HNode* pop(HNode* key, Cmp cmp) {

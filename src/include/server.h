@@ -110,7 +110,7 @@ public:
         return (uint32_t)((next_us - now_us) / 1000);
     }
 
-    void join() { // fb是套接字
+    void join() { // fd是套接字
         // set the listen fd to nonblocking mode
         m_f.set_nb();
 

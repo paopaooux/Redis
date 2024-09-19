@@ -61,7 +61,7 @@ void out_arr(Bytes& out, uint32_t n) {
 }
 
 void out_update_arr(Bytes& out, uint32_t n) {
-    auto type = static_cast<SerType>(out.getNumber<int>(1));
+    auto type = static_cast<SerType>(out.getNumber<uint8_t>(1));
     assert(type == SerType::SER_ARR);
     out.insertNumber(n, 1, 4);
 }
@@ -107,7 +107,8 @@ struct Entry {
     size_t heap_idx;
     Entry() = delete;
     Entry(const std::string& k)
-        : type{EntryType::T_STR}, key{k}, val{}, node{string_hash(k)}, zset{nullptr}, heap_idx{0} {}
+        : type{EntryType::T_STR}, key{std::move(k)}, val{}, node{string_hash(k)}, zset{nullptr},
+          heap_idx{0} {}
     Entry(std::string&& k, const std::string& v, uint64_t hcode)
         : type{EntryType::T_STR}, key(std::move(k)), val{v}, node{hcode}, zset{nullptr},
           heap_idx{0} {}
@@ -317,10 +318,6 @@ void do_zquery(const std::vector<std::string>& cmd, Bytes& out) {
         out_err(out, CmdErr::ERR_TYPE, "expect zset");
         return;
     }
-
-    if (limit & 1)
-        limit++;
-    limit >>= 1;
 
     auto ite = ent->zset->query(score, name, offset, limit);
 

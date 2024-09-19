@@ -125,7 +125,7 @@ public:
     int readByte_nb(Bytes& bytes, size_t count) const {
         // 非阻塞模式读出fd, 情况要复杂些, 可能寄, 可能阻塞, 可能读完
         // 因为可能阻塞, 所有必须返回, 不能在函数内处理
-        // -1表示寄, 0表示读完, 1表示阻塞, 2表示读完
+        // -1表示寄, 0表示没读到任何数据, 1表示阻塞, 2表示读完
         // 对Bytes相当于写
         std::size_t end = bytes.data.size();
         bytes.data.resize(end + count);
@@ -138,8 +138,8 @@ public:
             return 1;
         }
         if (rv < 0) {
-            return -1;
             bytes.data.resize(end);
+            return -1;
         }
         if (rv == 0) {
             bytes.data.resize(end);
