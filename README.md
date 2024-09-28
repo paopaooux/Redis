@@ -41,9 +41,10 @@ pttl key      							# 查看存活时间
 python3 test/redis_test.py
 ```
 
+## Reference
 
+[Build Your Own Redis with C/C++](https://build-your-own.org/redis/)
 
 ## Other
 
 C 版本Redis实现 [my_redis](https://github.com/paopaooux/my-redis)
-
